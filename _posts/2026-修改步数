@@ -1,1 +1,25 @@
-sss
+---
+layout:     post   				    # 使用的布局（不需要改）
+title:      My First Post 				# 标题 
+subtitle:   Hello World, Hello Blog #副标题
+date:       2026年3月3日				# 时间
+author:     BY 						# 作者
+header-img: img/post-bg-2015.jpg 	#这篇文章标题背景图片
+catalog: true 						# 是否归档
+tags:								#标签
+    - 生活
+---
+
+## Hey
+>#
+{
+  "USER": "3496239099@qq.com#19154955749@163.com",
+  "PWD": "zxcvbnm1.#zxcvbnm1.",
+  "MIN_STEP": "18000",
+  "MAX_STEP": "25000",
+  "PUSH_PLUS_TOKEN": "",
+  "PUSH_PLUS_HOUR": "",
+  "PUSH_PLUS_MAX": "30",
+  "SLEEP_GAP": "5",
+  "USE_CONCURRENT": "False"
+}

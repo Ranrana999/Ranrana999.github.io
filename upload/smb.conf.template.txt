@@ -1,0 +1,46 @@
+[global]
+    netbios name = |NAME| 
+    interfaces = |INTERFACES|
+    server string = |DESCRIPTION|
+    unix charset = |CHARSET|
+    workgroup = WORKGROUP
+
+    # 基础安全设置
+    bind interfaces only = no
+    deadtime = 15
+    security = user
+    
+    # 关键修改：改用现代数据库格式，兼容性更好
+    passdb backend = tdbsam
+    
+    # 允许匿名访问映射
+    map to guest = Bad User
+    
+    # 性能与兼容性优化
+    socket options = TCP_NODELAY IPTOS_LOWDELAY
+    # 解决部分手机连接缓慢问题
+    disable netbios = No
+    smb ports = 445 139
+
+    # 忽略垃圾文件
+    veto files = /Thumbs.db/.DS_Store/._.DS_Store/.apdisk/
+    delete veto files = yes
+
+# ================= 具体的共享目录设置 =================
+# 你必须添加以下类似的代码块，否则进去是空的
+[SharedFiles]
+    comment = 我的共享文件夹
+    # ！！！修改为你的实际文件夹路径！！！
+    path = /mnt/usbbb
+    
+    # 权限控制
+    browseable = yes
+    writable = yes
+    guest ok = yes
+    read only = no
+    
+    # 强制新建文件的权限（解决手机上传后电脑打不开的问题）
+    create mask = 0666
+    directory mask = 0777
+    force user = root
+    force group = root

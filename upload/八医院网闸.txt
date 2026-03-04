@@ -1,0 +1,16 @@
+# DNAT规则：将访问192.168.10.191:443的流量转发到128.16.0.1:443
+iptables -t nat -A NATSERVER -p tcp -d 192.168.10.191 --dport 443 -j DNAT --to-destination 128.16.0.1:443
+
+# EASYIP规则：对从10网段到16网段的流量做MASQUERADE
+
+iptables -t nat -A EASYIP -s 192.168.10.0/24 -d 128.16.0.1 -p udp --dport 443 -j MASQUERADE --to-ports 1024-65535
+
+
+
+
+# DNAT规则：将访问128.16.0.1:443的流量转发到168.168.45.14:443
+iptables -t nat -A NATSERVER -p tcp -d 128.16.0.1 --dport 443 -j DNAT --to-destination 168.168.45.14:443
+
+# EASYIP规则：对从16网段到45网段的流量做MASQUERADE
+iptables -t nat -A EASYIP -s 128.16.0.0/24 -d 168.168.45.14 -p tcp --dport 443 -j MASQUERADE --to-ports 1024-65535
+iptables -t nat -A EASYIP -s 128.16.0.0/24 -d 168.168.45.14 -p udp --dport 443 -j MASQUERADE --to-ports 1024-65535

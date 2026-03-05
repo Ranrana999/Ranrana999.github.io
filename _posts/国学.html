@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国学常识·终极记忆挑战</title>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --bg: #1a1a1a;
+            --card-bg: #2c2c2c;
+            --text: #e0e0e0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: var(--gold);
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        /* 3D 卡片容器 */
+        .scene {
+            width: 350px;
+            height: 480px;
+            perspective: 1000px;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            border: 2px solid var(--gold);
+            padding: 30px;
+            box-sizing: border-box;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #333, #111);
+        }
+
+        .card-front::after {
+            content: "点击翻面";
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.8rem;
+            color: var(--gold);
+            opacity: 0.6;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+            transform: rotateY(180deg);
+            overflow-y: auto;
+        }
+
+        .category-tag {
+            background: var(--gold);
+            color: black;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .content-text {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .answer-text {
+            font-size: 1.1rem;
+            color: var(--gold);
+            line-height: 1.8;
+            text-align: left;
+            width: 100%;
+        }
+
+        .controls {
+            margin-top: 40px;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        button:hover {
+            background: var(--gold);
+            color: black;
+            box-shadow: 0 0 20px var(--gold);
+        }
+
+        /* 滚动条美化 */
+        .card-back::-webkit-scrollbar { width: 5px; }
+        .card-back::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>常识博学录</h1>
+        <p id="counter">已掌握: 0 / 76</p>
+    </div>
+
+    <div class="scene">
+        <div class="card" id="card" onclick="this.classList.toggle('is-flipped')">
+            <div class="card-face card-front">
+                <div class="category-tag" id="display-id">秘籍</div>
+                <div class="content-text" id="display-title">点击下方按钮开始探索</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="answer-text" id="display-answer">
+                    答案将在此处揭晓...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="drawCard()">随机抽取</button>
+    </div>
+
+    <script>
+        const rawData = [
+            ["十二生肖", "子鼠、丑牛、寅虎、卯兔、辰龙、巳蛇、午马、未羊、申猴、酉鸡、戌狗、亥猪"],
+            ["十大名茶", "西湖龙井、碧螺春、信阳毛尖、君山银针、六安瓜片、黄山毛峰、祁门红茶、都匀毛尖、铁观音、武夷岩茶"],
+            ["四大名绣", "苏绣（苏州）、湘绣（湖南）、蜀绣（四川）、广绣（广东）"],
+            ["四大名扇", "檀香扇（江苏）、火画扇（广东）、竹丝扇（四川）、绫绢扇（浙江）"],
+            ["四大名花", "牡丹（洛阳）、水仙（漳州）、菊花（杭州）、山茶（昆明）"],
+            ["四大发明", "造纸（蔡伦）、火药（唐朝）、印刷术（毕升）、指南针（北宋）"],
+            ["古代主要节日", "元日(正月初一)、人日(初七)、上元(十五)、社日、寒食、清明、端午、七夕、中元、中秋、重阳、冬至、腊日、除夕"],
+            ["四书", "《论语》、《中庸》、《大学》、《孟子》"],
+            ["五经", "《诗经》、《尚书》、《礼记》、《易经》、《春秋》"],
+            ["八股文", "破题、承题、起讲、入手、起股、中股、后股、束股"],
+            ["六子全书", "《老子》、《庄子》、《列子》、《荀子》、《扬子法言》、《文中子中说》"],
+            ["汉字六书", "象形、指事、形声、会意、转注、假借"],
+            ["书法九势", "落笔、转笔、藏峰、藏头、护尾、疾势、掠笔、涩势、横鳞竖勒"],
+            ["竹林七贤", "嵇康、刘伶、阮籍、山涛、阮咸、向秀、王戎"],
+            ["饮中八仙", "李白、贺知章、李适之、李琎、崔宗之、苏晋、张旭、焦遂"],
+            ["蜀之八仙", "容成公、李耳、董促舒、张道陵、严君平、李八百、范长生、尔朱先生"],
+            ["扬州八怪", "郑板桥、汪士慎、李鱓、黄慎、金农、高翔、李方鹰、罗聘"],
+            ["北宋四大家", "黄庭检、欧阳修、苏轼、王安石"],
+            ["唐宋古文八大家", "韩愈、柳宗元、欧阳修、苏洵、苏轼、苏辙、王安石、曾巩"],
+            ["十三经", "易、诗、书、三礼(礼记/仪礼/周礼)、三传(公羊/左传/谷梁)、孝经、论语、尔雅、孟子"],
+            ["四大民间传说", "《牛郎织女》、《孟姜女》、《梁山伯与祝英台》、《白蛇与许仙》"],
+            ["四大文化遗产", "明清档案、殷墟甲骨、居延汉简、敦煌经卷"],
+            ["元代四大戏剧", "《窦娥冤》、《西厢记》、《牡丹亭》、《长生殿》"],
+            ["晚清四大谴责小说", "《官场现形记》、《二十年目睹之怪现状》、《老残游记》、《孽海花》"],
+            ["五彩", "青、黄、赤、白、黑"],
+            ["五音", "宫、商、角、址(徵)、羽"],
+            ["七宝", "金、银、琉璃、珊瑚、砗磲、珍珠、玛瑙"],
+            ["九宫", "正宫、中吕宫、南吕宫、仙吕宫、黄钟宫、大面调、双调、商调、越调"],
+            ["七大艺术", "绘画、音乐、雕塑、戏剧、文学、建筑、电影"],
+            ["四大名瓷窑", "瓷州窑、龙泉窑、景德镇窑、德化窑"],
+            ["四大名旦", "梅兰芳、程砚秋、尚小云、荀慧生"],
+            ["六礼", "冠、婚、丧、祭、乡饮酒、相见"],
+            ["六艺", "礼、乐、射、御、书、数"],
+            ["六义", "风、赋、比、兴、雅、颂"],
+            ["八旗", "镶黄、正黄、镶白、正白、镶红、正红、镶蓝、正蓝"],
+            ["十恶", "谋反、谋大逆、谋叛、谋恶逆、不道、大不敬、不孝、不睦、不义、内乱"],
+            ["九流", "儒家、道家、阴阳家、法家、名家、墨家、纵横家、杂家、农家"],
+            ["三山", "黄山、庐山、雁荡山"],
+            ["五岭", "越城岭、都庞岭、萌诸岭、骑田岭、大庾岭"],
+            ["五岳", "东岳泰山、西岳华山、南岳衡山、北岳恒山、中岳嵩山"],
+            ["五湖", "鄱阳湖、洞庭湖、太湖、洪泽湖、巢湖"],
+            ["四海", "渤海、黄海、东海、南海"],
+            ["四大名桥", "广济桥、赵州桥、洛阳桥、卢沟桥"],
+            ["四大名园", "颐和园、避暑山庄、拙政园、留园"],
+            ["四大名刹", "灵岩寺、国清寺、玉泉寺、栖霞寺"],
+            ["四大名楼", "岳阳楼、黄鹤楼、滕王阁、大观楼"],
+            ["四大名亭", "醉翁亭、陶然亭、爱晚亭、湖心亭"],
+            ["四大古镇", "景德镇、佛山镇、汉口镇、朱仙镇"],
+            ["四大碑林", "西安碑林、孔庙碑林、地震碑林、南门碑林"],
+            ["四大名塔", "嵩岳寺塔、飞虹塔、释迦塔、千寻塔"],
+            ["四大石窟", "莫高窟、云岗石窟、龙门石窟、麦积山石窟"],
+            ["四大书院", "白鹿洞、岳麓、嵩阳、应天书院"],
+            ["四大佛教名山", "普陀山(观音)、五台山(文殊)、峨眉山(普贤)、九华山(地藏)"],
+            ["四大道教名山", "武当山、龙虎山、齐云山、青城山"],
+            ["五行", "金、木、水、火、土"],
+            ["八卦", "乾天、坤地、震雷、巽风、坎水、离火、艮山、兑泽"],
+            ["三皇", "伏羲、女娲、神农"],
+            ["五帝", "太皞、炎帝、黄帝、少皞、颛顼"],
+            ["三教", "儒教、道教、佛教"],
+            ["三清", "元始天尊、灵宝天尊、道德天尊"],
+            ["四御", "玉皇大帝、紫微北极大帝、勾陈上宫大帝、后土皇地祗"],
+            ["八仙", "铁拐李、钟离权、张果老、吕洞宾、何仙姑、蓝采和、韩湘子、曹国舅"],
+            ["十八罗汉", "降龙、伏虎、长眉、托塔、举钵、开心、看门、骑象等18位罗汉"],
+            ["十八层地狱", "泥犁、刀山、沸沙、沸屎、黑身、火车、镬汤、铁床、盖山、寒冰、剥皮、畜生、刀兵、铁磨、铁册、蛆虫、烊铜等"],
+            ["五脏", "心、肝、脾、肺、肾"],
+            ["六腑", "胃、胆、三焦、膀胱、大肠、小肠"],
+            ["七情", "喜、怒、哀、乐、爱、恶、欲"],
+            ["五常", "仁、义、礼、智、信"],
+            ["五伦", "君臣、父子、兄弟、夫妇、朋友"],
+            ["三姑", "尼姑、道姑、卦姑"],
+            ["六婆", "牙婆、媒婆、师婆、虔婆、药婆、稳婆"],
+            ["九属", "从高祖父到玄孙的九代血亲关系"],
+            ["五谷", "稻、黍、稷、麦、豆"],
+            ["八大菜系", "川、鲁、粤、苏、浙、闽、湘、徽"],
+            ["五毒", "石胆、丹砂、雄黄、矾石、慈石"],
+            ["配药七方", "大、小、缓、急、奇、偶、复"]
+        ];
+
+        let learnedCount = 0;
+        const mastered = new Set();
+
+        function drawCard() {
+            const cardElement = document.getElementById('card');
+            cardElement.classList.remove('is-flipped');
+            
+            setTimeout(() => {
+                const index = Math.floor(Math.random() * rawData.length);
+                const [title, answer] = rawData[index];
+                
+                document.getElementById('display-id').innerText = `编号 ${index + 1}`;
+                document.getElementById('display-title').innerText = title;
+                document.getElementById('display-answer').innerText = answer;
+                
+                if(!mastered.has(index)) {
+                    mastered.add(index);
+                    learnedCount = mastered.size;
+                    document.getElementById('counter').innerText = `已阅: ${learnedCount} / 76`;
+                }
+            }, 200);
+        }
+    </script>
+</body>
+</html>
